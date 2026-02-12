@@ -388,7 +388,7 @@ run_survey() {
 - Spec file: $spec_file
 - Lean project root: $LEAN_DIR
 - Build command: $LAKE_BUILD
-- Existing .lean files: $(find_lean_files | tr '\n' ', ' || echo 'none')
+- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 - Domain context: DOMAIN_CONTEXT.md
 - Mathlib source: $(find .lake/packages/mathlib/Mathlib -maxdepth 0 -type d 2>/dev/null || find lake-packages/mathlib/Mathlib -maxdepth 0 -type d 2>/dev/null || echo 'not found')
 - Mathlib search: ./scripts/mathlib-search.sh (use for targeted searches)
@@ -467,7 +467,7 @@ run_construct() {
 - Spec file: $spec_file (READ -- these are your requirements)
 - Spec directory: $SPEC_DIR (write construction docs here)
 - Domain context: DOMAIN_CONTEXT.md
-- Existing .lean files: $(find_lean_files | tr '\n' ', ' || echo 'none')
+- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the spec, then write an informal construction document with definitions, theorems, and proof sketches." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
@@ -508,10 +508,10 @@ run_formalize() {
 
 ## Context
 - Spec file: $spec_file (READ -- do not modify)
-- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | tr '\n' ', ' || echo 'none')
+- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | wc -l | tr -d ' ') construction doc(s) in $SPEC_DIR (use Glob to discover)
 - Domain context: DOMAIN_CONTEXT.md
 - Build command: $LAKE_BUILD
-- Existing .lean files: $(find_lean_files | tr '\n' ', ' || echo 'none')
+- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the spec and construction docs, then write .lean files with ALL proof bodies as sorry. Verify with $LAKE_BUILD." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
@@ -569,14 +569,14 @@ run_prove() {
 
 ## Context
 - Spec file: $spec_file (READ-ONLY -- OS-enforced, do not modify)
-- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | tr '\n' ', ' || echo 'none')
+- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | wc -l | tr -d ' ') construction doc(s) in $SPEC_DIR (use Glob to discover)
 - Domain context: DOMAIN_CONTEXT.md (append-only: you may add to the DOES NOT APPLY section)
 - Build command: $LAKE_BUILD
 - Error classifier: ./scripts/lean-error-classify.sh (pipe lake build stderr through it)
 - Error summarizer: ./scripts/lean-error-summarize.sh (pipe lake build stderr through it)
 - Lake timed build: ./scripts/lake-timed.sh build (records build timing)
 - Current sorry count: $sorry_count
-- .lean files: $(find_lean_files | tr '\n' ', ')
+- .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the .lean files and spec. Replace sorrys with real proofs using Edit. Run '$LAKE_BUILD' after each change." \
     --allowed-tools "Read,Edit,Bash,Glob,Grep,Write" \
@@ -625,7 +625,7 @@ run_audit() {
 
 ## Context
 - Spec file: $spec_file (READ-ONLY)
-- .lean files: $(find_lean_files | tr '\n' ', ') (ALL READ-ONLY)
+- .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover) (ALL READ-ONLY)
 - Build command: $LAKE_BUILD
 - Current sorry count: $sorry_count
 - Current axiom/unsafe count: $axiom_count
