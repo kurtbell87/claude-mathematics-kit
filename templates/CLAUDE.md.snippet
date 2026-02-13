@@ -48,12 +48,12 @@ SURVEY → SPECIFY → CONSTRUCT → FORMALIZE → PROVE → AUDIT → LOG
 
 ## Phase Output (Disk-Only Logging)
 
-All `./math.sh` phase commands return **only** a compact summary on stdout: the last agent message (≤500 chars), exit code, and log path. Full output — including `lake build` errors, tactic state, and type mismatches — goes to `/tmp/math-{phase}.log`. If a phase fails or you need more detail, read the log:
+All `./math.sh` phase commands return **only** a compact summary on stdout: the last agent message (≤500 chars), exit code, and log path. Full output — including `lake build` errors, tactic state, and type mismatches — goes to `$MATH_LOG_DIR/{phase}.log` (defaults to `/tmp/math-<project-name>/`). If a phase fails or you need more detail, read the log:
 
 ```bash
 # Examples:
-cat /tmp/math-prove.log     # Full prove phase transcript
-cat /tmp/math-formalize.log # Full formalize phase transcript
+cat $MATH_LOG_DIR/prove.log     # Full prove phase transcript
+cat $MATH_LOG_DIR/formalize.log # Full formalize phase transcript
 ```
 
 This prevents verbose Lean4 output from flooding the orchestrator's context window.

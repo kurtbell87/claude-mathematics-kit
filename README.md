@@ -82,7 +82,7 @@ Auto-advances through constructions listed in `CONSTRUCTIONS.md`. Supports depen
 
 ### Monitoring a Running Phase
 
-Each phase streams structured JSON logs to `/tmp/math-{phase}.log`. The built-in `watch` command parses these into a live dashboard:
+Each phase streams structured JSON logs to `$MATH_LOG_DIR/{phase}.log` (defaults to `/tmp/math-<project-name>/`). The built-in `watch` command parses these into a live dashboard:
 
 ```bash
 ./math.sh watch prove               # Live-tail the prove phase
@@ -93,13 +93,13 @@ Each phase streams structured JSON logs to `/tmp/math-{phase}.log`. The built-in
 
 The dashboard shows elapsed time, model, tool call counts, files read/written/edited, agent narration, and build output.
 
-Phase runners redirect all sub-agent output to disk only (`/tmp/math-{phase}.log`). Stdout receives a compact summary — the last agent message, exit code, and log path — so the orchestrator's context window stays clean. This is especially important for the mathematics kit, where `lake build` output and Lean4 type errors can be extremely verbose. If you need more detail, grep or read the log file directly.
+Phase runners redirect all sub-agent output to disk only (`$MATH_LOG_DIR/{phase}.log`). Stdout receives a compact summary — the last agent message, exit code, and log path — so the orchestrator's context window stays clean. This is especially important for the mathematics kit, where `lake build` output and Lean4 type errors can be extremely verbose. If you need more detail, grep or read the log file directly.
 
 #### What the Orchestrator Sees
 
 Each `./math.sh` phase returns **only** a compact summary on stdout:
 
-- **Phase output** goes to `/tmp/math-{phase}.log` (not stdout)
+- **Phase output** goes to `$MATH_LOG_DIR/{phase}.log` (not stdout)
 - **Stdout receives:** last agent message (≤500 chars) + exit code + log path
 - **To get more detail:** grep or read the log file (pull-based)
 - **The watch script** reads logs directly and is unaffected by this
@@ -156,6 +156,7 @@ Environment variables:
 | `LEAN_DIR` | `.` | Lean4 project root |
 | `SPEC_DIR` | `specs` | Spec & construction docs directory |
 | `LAKE_BUILD` | `lake build` | Build command |
+| `MATH_LOG_DIR` | `/tmp/math-<project>` | Log directory (auto-derived from repo name) |
 | `MAX_REVISIONS` | `3` | Max revision cycles per construction |
 | `MAX_PROGRAM_CYCLES` | `20` | Max cycles in program mode |
 | `MATH_AUTO_MERGE` | `false` | Auto-merge PR after creation |

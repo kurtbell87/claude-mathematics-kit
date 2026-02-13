@@ -38,6 +38,12 @@ MAX_REVISIONS="${MAX_REVISIONS:-3}"                # Max revision cycles before 
 MAX_PROGRAM_CYCLES="${MAX_PROGRAM_CYCLES:-20}"
 CONSTRUCTIONS_FILE="${CONSTRUCTIONS_FILE:-CONSTRUCTIONS.md}"
 
+# Log directory -- per-project isolation under /tmp
+_project_name="$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")"
+MATH_LOG_DIR="${MATH_LOG_DIR:-/tmp/math-${_project_name}}"
+export MATH_LOG_DIR
+mkdir -p "$MATH_LOG_DIR"
+
 # Post-cycle PR settings
 MATH_AUTO_MERGE="${MATH_AUTO_MERGE:-false}"
 MATH_DELETE_BRANCH="${MATH_DELETE_BRANCH:-false}"
@@ -328,10 +334,10 @@ run_status() {
 _phase_summary() {
   # Extract the final agent message from the stream-json log and print a
   # compact summary.  This keeps the orchestrator's context window lean —
-  # the full transcript stays on disk at /tmp/math-{phase}.log.
+  # the full transcript stays on disk at $MATH_LOG_DIR/{phase}.log.
   local phase="$1"
   local exit_code="$2"
-  local log="/tmp/math-${phase}.log"
+  local log="$MATH_LOG_DIR/${phase}.log"
 
   local summary
   summary=$(tail -20 "$log" 2>/dev/null | python3 -c "
@@ -396,7 +402,7 @@ run_survey() {
 Read the spec file first, then survey Mathlib and existing formalizations." \
     --allowed-tools "Read,Bash,Glob,Grep" \
     -p "Read the spec file at $spec_file, then survey Mathlib and existing formalizations for this domain." \
-    > /tmp/math-survey.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/survey.log" 2>&1 || exit_code=$?
 
   _phase_summary "survey" "$exit_code"
   end_phase_timer "survey"
@@ -433,7 +439,7 @@ run_specify() {
 Write precise property requirements to $spec_file. Update DOMAIN_CONTEXT.md with Mathlib mappings." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
     -p "Write precise mathematical property requirements to $spec_file" \
-    > /tmp/math-specify.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/specify.log" 2>&1 || exit_code=$?
 
   _phase_summary "specify" "$exit_code"
   end_phase_timer "specify"
@@ -472,7 +478,7 @@ run_construct() {
 Read the spec, then write an informal construction document with definitions, theorems, and proof sketches." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
     -p "Read the spec at $spec_file, then write a construction document with definitions, theorems, and proof sketches." \
-    > /tmp/math-construct.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/construct.log" 2>&1 || exit_code=$?
 
   _phase_summary "construct" "$exit_code"
   end_phase_timer "construct"
@@ -516,7 +522,7 @@ run_formalize() {
 Read the spec and construction docs, then write .lean files with ALL proof bodies as sorry. Verify with $LAKE_BUILD." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
     -p "Read the spec and construction docs, then write Lean4 files with definitions and sorry theorems. Verify with '$LAKE_BUILD'." \
-    > /tmp/math-formalize.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/formalize.log" 2>&1 || exit_code=$?
 
   _phase_summary "formalize" "$exit_code"
   end_phase_timer "formalize"
@@ -581,7 +587,7 @@ run_prove() {
 Read the .lean files and spec. Replace sorrys with real proofs using Edit. Run '$LAKE_BUILD' after each change." \
     --allowed-tools "Read,Edit,Bash,Glob,Grep,Write" \
     -p "Fill in all sorry placeholders with real Lean4 proofs. Use Edit to replace sorry. Run '$LAKE_BUILD' after each change. Current sorry count: $sorry_count" \
-    > /tmp/math-prove.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/prove.log" 2>&1 || exit_code=$?
 
   _phase_summary "prove" "$exit_code"
   end_phase_timer "prove"
@@ -635,7 +641,7 @@ run_audit() {
 Run '$LAKE_BUILD', audit all .lean files, check spec coverage. Write results to CONSTRUCTION_LOG.md." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
     -p "Audit the formalization. Run '$LAKE_BUILD', check for sorry/axiom, verify spec coverage. Write results to CONSTRUCTION_LOG.md." \
-    > /tmp/math-audit.log 2>&1 || exit_code=$?
+    > "$MATH_LOG_DIR/audit.log" 2>&1 || exit_code=$?
 
   _phase_summary "audit" "$exit_code"
   end_phase_timer "audit"
@@ -1233,6 +1239,7 @@ case "${1:-help}" in
     echo "  LEAN_DIR='.'             Lean4 project root"
     echo "  SPEC_DIR='specs'         Spec & construction docs directory"
     echo "  LAKE_BUILD='lake build'  Build command"
+    echo "  MATH_LOG_DIR='/tmp/math-<project>'  Log directory (auto-derived from repo name)"
     echo "  MAX_REVISIONS='3'        Max revision cycles per construction"
     echo "  MAX_PROGRAM_CYCLES='20'  Max cycles in program mode"
     echo "  MATH_AUTO_MERGE='false'  Auto-merge PR after creation"
