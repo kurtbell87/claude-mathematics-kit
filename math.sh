@@ -397,13 +397,9 @@ run_survey() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-survey.md")
 
 ## Context
-- Spec file: $spec_file
-- Lean project root: $LEAN_DIR
-- Build command: $LAKE_BUILD
-- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
+- Spec: $spec_file
+- Mathlib source: .lake/packages/mathlib/ (use ./scripts/mathlib-search.sh for searches)
 - Domain context: DOMAIN_CONTEXT.md
-- Mathlib source: $(find .lake/packages/mathlib/Mathlib -maxdepth 0 -type d 2>/dev/null || find lake-packages/mathlib/Mathlib -maxdepth 0 -type d 2>/dev/null || echo 'not found')
-- Mathlib search: ./scripts/mathlib-search.sh (use for targeted searches)
 
 Read the spec file first, then survey Mathlib and existing formalizations." \
     --allowed-tools "Read,Bash,Glob,Grep" \
@@ -436,11 +432,9 @@ run_specify() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-specify.md")
 
 ## Context
-- Spec file to write: $spec_file
+- Spec: $spec_file (write here)
 - Spec directory: $SPEC_DIR
 - Domain context: DOMAIN_CONTEXT.md
-- Existing specs: $(find "$SPEC_DIR" -name "*.md" -type f 2>/dev/null | tr '\n' ', ' || echo 'none')
-- Construction spec template: templates/construction-spec.md (if available)
 
 Write precise property requirements to $spec_file. Update DOMAIN_CONTEXT.md with Mathlib mappings." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
@@ -476,10 +470,9 @@ run_construct() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-construct.md")
 
 ## Context
-- Spec file: $spec_file (READ -- these are your requirements)
+- Spec: $spec_file (READ-ONLY)
 - Spec directory: $SPEC_DIR (write construction docs here)
 - Domain context: DOMAIN_CONTEXT.md
-- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the spec, then write an informal construction document with definitions, theorems, and proof sketches." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
@@ -526,11 +519,9 @@ run_formalize() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-formalize.md")
 
 ## Context
-- Spec file: $spec_file (READ -- do not modify)
-- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | wc -l | tr -d ' ') construction doc(s) in $SPEC_DIR (use Glob to discover)
+- Spec: $spec_file (READ-ONLY)
+- Build: $LAKE_BUILD
 - Domain context: DOMAIN_CONTEXT.md
-- Build command: $LAKE_BUILD
-- Existing .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the spec and construction docs, then write .lean files with ALL proof bodies as sorry. Verify with $LAKE_BUILD." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
@@ -611,15 +602,10 @@ Start from where the previous session left off. Do NOT re-attempt theorems liste
     --append-system-prompt "$(cat "$PROMPT_DIR/math-prove.md")
 
 ## Context
-- Spec file: $spec_file (READ-ONLY -- OS-enforced, do not modify)
-- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | wc -l | tr -d ' ') construction doc(s) in $SPEC_DIR (use Glob to discover)
-- Domain context: DOMAIN_CONTEXT.md (append-only: you may add to the DOES NOT APPLY section)
-- Build command: $LAKE_BUILD
-- Error classifier: ./scripts/lean-error-classify.sh (pipe lake build stderr through it)
-- Error summarizer: ./scripts/lean-error-summarize.sh (pipe lake build stderr through it)
-- Lake timed build: ./scripts/lake-timed.sh build (records build timing)
-- Current sorry count: $sorry_count
-- .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
+- Spec: $spec_file (READ-ONLY)
+- Build: $LAKE_BUILD
+- Domain context: DOMAIN_CONTEXT.md (append-only: DOES NOT APPLY section)
+- Sorrys: $sorry_count
 ${checkpoint_context}
 
 Read the .lean files and spec. Replace sorrys with real proofs using Edit. Run '$LAKE_BUILD' after each change." \
@@ -836,14 +822,9 @@ run_polish() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-polish.md")
 
 ## Context
-- Spec file: $spec_file (READ-ONLY -- OS-enforced, do not modify)
-- Construction docs: $(find "$SPEC_DIR" -name "construction-*" -type f 2>/dev/null | wc -l | tr -d ' ') construction doc(s) in $SPEC_DIR (use Glob to discover)
-- Domain context: DOMAIN_CONTEXT.md
-- Build command: $LAKE_BUILD
-- Style guide: STYLE_GUIDE.md (read sections 1-4 for reference)
-- Scratch directory: scratch/ (for lint_check.lean)
+- Spec: $spec_file (READ-ONLY)
+- Build: $LAKE_BUILD
 - Construction log: CONSTRUCTION_LOG.md (write naming warnings here)
-- .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover)
 
 Read the .lean files, apply Mathlib style fixes, run #lint, flag naming issues. Run '$LAKE_BUILD' after each change." \
     --allowed-tools "Read,Edit,Write,Bash,Glob,Grep" \
@@ -898,13 +879,10 @@ run_audit() {
     --append-system-prompt "$(cat "$PROMPT_DIR/math-audit.md")
 
 ## Context
-- Spec file: $spec_file (READ-ONLY)
-- .lean files: $(find_lean_files | wc -l | tr -d ' ') .lean file(s) (use Glob '**/*.lean' to discover) (ALL READ-ONLY)
-- Build command: $LAKE_BUILD
-- Current sorry count: $sorry_count
-- Current axiom/unsafe count: $axiom_count
+- Spec: $spec_file (READ-ONLY)
+- Build: $LAKE_BUILD
+- Sorrys: $sorry_count | Axioms: $axiom_count
 - Construction log: CONSTRUCTION_LOG.md (WRITE to this)
-- Domain context: DOMAIN_CONTEXT.md
 
 Run '$LAKE_BUILD', audit all .lean files, check spec coverage. Write results to CONSTRUCTION_LOG.md." \
     --allowed-tools "Read,Write,Edit,Bash,Glob,Grep" \
